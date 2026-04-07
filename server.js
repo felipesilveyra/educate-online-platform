@@ -1,10 +1,9 @@
 /**
  * BACKEND PARA PLATAFORMA DE APRENDIZAJE + SHOPIFY
- * Listo para Railway (SIN GitHub, SIN terminal)
+ * Versión Railway - Simplificada y robusta
  */
 
 const express = require('express');
-const mysql = require('mysql2/promise');
 const cors = require('cors');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
@@ -17,25 +16,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
 
-// Middleware para raw body (webhook de Shopify)
-app.use(express.raw({ type: 'application/json' }));
-
-// ─── CONFIGURACIÓN ────────────────────────────────────────────────────────────
-const DB_CONFIG = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'educate_online',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-};
-
 const JWT_SECRET = process.env.JWT_SECRET || 'tu-clave-secreta-super-segura';
 const SHOPIFY_API_SECRET = process.env.SHOPIFY_API_SECRET || '';
-
-// Pool de conexiones
-const pool = mysql.createPool(DB_CONFIG);
 
 // ─── DATOS DE MÓDULOS Y VIDEOS ────────────────────────────────────────────────
 const MODULES = [
@@ -50,70 +32,26 @@ const MODULES = [
 ];
 
 const VIDEOS = [
-  // Módulo 1
-  { id: 1, moduleId: 1, videoNumber: 1, title: "Mentalidad - Parte 1", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: 2, moduleId: 1, videoNumber: 2, title: "Mentalidad - Parte 2", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  // Módulo 2
-  { id: 3, moduleId: 2, videoNumber: 1, title: "Psicología - Parte 1", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: 4, moduleId: 2, videoNumber: 2, title: "Psicología - Parte 2", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  // Módulo 3
-  { id: 5, moduleId: 3, videoNumber: 1, title: "Estructura - Parte 1", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: 6, moduleId: 3, videoNumber: 2, title: "Estructura - Parte 2", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  // Módulo 4
-  { id: 7, moduleId: 4, videoNumber: 1, title: "Guiones - Parte 1", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: 8, moduleId: 4, videoNumber: 2, title: "Guiones - Parte 2", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  // Módulo 5
-  { id: 9, moduleId: 5, videoNumber: 1, title: "Objeciones - Parte 1", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: 10, moduleId: 5, videoNumber: 2, title: "Objeciones - Parte 2", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  // Módulo 6
-  { id: 11, moduleId: 6, videoNumber: 1, title: "Socios - Parte 1", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: 12, moduleId: 6, videoNumber: 2, title: "Socios - Parte 2", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  // Módulo 7
-  { id: 13, moduleId: 7, videoNumber: 1, title: "6 Cifras - Parte 1", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  { id: 14, moduleId: 7, videoNumber: 2, title: "6 Cifras - Parte 2", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-  // Módulo 8
-  { id: 15, moduleId: 8, videoNumber: 1, title: "Errores - Parte 1", youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+  { id: 1, moduleId: 1, videoNumber: 1, title: "Mentalidad - Parte 1", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 2, moduleId: 1, videoNumber: 2, title: "Mentalidad - Parte 2", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 3, moduleId: 2, videoNumber: 1, title: "Psicología - Parte 1", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 4, moduleId: 2, videoNumber: 2, title: "Psicología - Parte 2", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 5, moduleId: 3, videoNumber: 1, title: "Estructura - Parte 1", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 6, moduleId: 3, videoNumber: 2, title: "Estructura - Parte 2", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 7, moduleId: 4, videoNumber: 1, title: "Guiones - Parte 1", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 8, moduleId: 4, videoNumber: 2, title: "Guiones - Parte 2", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 9, moduleId: 5, videoNumber: 1, title: "Objeciones - Parte 1", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 10, moduleId: 5, videoNumber: 2, title: "Objeciones - Parte 2", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 11, moduleId: 6, videoNumber: 1, title: "Socios - Parte 1", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 12, moduleId: 6, videoNumber: 2, title: "Socios - Parte 2", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 13, moduleId: 7, videoNumber: 1, title: "6 Cifras - Parte 1", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 14, moduleId: 7, videoNumber: 2, title: "6 Cifras - Parte 2", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
+  { id: 15, moduleId: 8, videoNumber: 1, title: "Errores Mortales", youtubeUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ" },
 ];
 
-// ─── FUNCIONES AUXILIARES ────────────────────────────────────────────────────
-async function initializeDatabase() {
-  const connection = await pool.getConnection();
-  try {
-    // Crear tabla de usuarios
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        shopify_id VARCHAR(255) UNIQUE,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        name VARCHAR(255),
-        password VARCHAR(255),
-        shopify_order_id VARCHAR(255),
-        access_granted BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Crear tabla de progreso
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS progress (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        video_id INT NOT NULL,
-        watched BOOLEAN DEFAULT FALSE,
-        watched_at TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        UNIQUE KEY unique_user_video (user_id, video_id)
-      )
-    `);
-
-    console.log('✅ Base de datos inicializada');
-  } catch (error) {
-    console.error('Error inicializando BD:', error);
-  } finally {
-    connection.release();
-  }
-}
+// Almacenamiento en memoria (temporal)
+const users = [];
+const progress = [];
 
 // Generar JWT
 function generateToken(userId) {
@@ -147,66 +85,59 @@ function authenticateToken(req, res, next) {
   next();
 }
 
-// ─── RUTAS: AUTENTICACIÓN ────────────────────────────────────────────────────
+// ─── RUTAS: AUTENTICACIÓN ────────────────────────────────────────────────
 
-// Login con email
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/register', (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, name, password } = req.body;
 
-    const connection = await pool.getConnection();
-    const [users] = await connection.query(
-      'SELECT * FROM users WHERE email = ? AND password = ?',
-      [email, password]
-    );
-    connection.release();
-
-    if (users.length === 0) {
-      return res.status(401).json({ error: 'Email o contraseña inválidos' });
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email y contraseña requeridos' });
     }
 
-    const user = users[0];
-    if (!user.access_granted) {
-      return res.status(403).json({ error: 'Acceso no autorizado' });
+    // Verificar si el usuario ya existe
+    if (users.find(u => u.email === email)) {
+      return res.status(400).json({ error: 'Email ya registrado' });
     }
 
-    const token = generateToken(user.id);
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+    const userId = users.length + 1;
+    const user = {
+      id: userId,
+      email,
+      name: name || email,
+      password, // En producción, hashear esto
+      access_granted: false,
+      created_at: new Date(),
+    };
+
+    users.push(user);
+    const token = generateToken(userId);
+
+    res.json({
+      success: true,
+      token,
+      user: { id: user.id, email: user.email, name: user.name },
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Registrar usuario
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/login', (req, res) => {
   try {
-    const { email, name, password } = req.body;
+    const { email, password } = req.body;
 
-    const connection = await pool.getConnection();
-    
-    try {
-      await connection.query(
-        'INSERT INTO users (email, name, password, access_granted) VALUES (?, ?, ?, ?)',
-        [email, name, password, true]
-      );
-
-      const [newUsers] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
-      const user = newUsers[0];
-      const token = generateToken(user.id);
-
-      res.json({ 
-        token, 
-        user: { id: user.id, email: user.email, name: user.name },
-        message: 'Registro exitoso'
-      });
-    } catch (error) {
-      if (error.code === 'ER_DUP_ENTRY') {
-        return res.status(400).json({ error: 'Email ya registrado' });
-      }
-      throw error;
-    } finally {
-      connection.release();
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
     }
+
+    const token = generateToken(user.id);
+    res.json({
+      success: true,
+      token,
+      user: { id: user.id, email: user.email, name: user.name },
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -224,35 +155,34 @@ app.get('/api/modules/:moduleId/videos', (req, res) => {
   res.json(videos);
 });
 
-// ─── RUTAS: PROGRESO ────────────────────────────────────────────────────────
+// ─── RUTAS: PROGRESO ────────────────────────────────────────────────────
 
-app.get('/api/progress', authenticateToken, async (req, res) => {
+app.get('/api/progress', authenticateToken, (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [progress] = await connection.query(
-      'SELECT * FROM progress WHERE user_id = ?',
-      [req.userId]
-    );
-    connection.release();
-
-    res.json(progress);
+    const userProgress = progress.filter(p => p.user_id === req.userId);
+    res.json(userProgress);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-app.post('/api/progress/mark-watched', authenticateToken, async (req, res) => {
+app.post('/api/progress/mark-watched', authenticateToken, (req, res) => {
   try {
     const { videoId } = req.body;
 
-    const connection = await pool.getConnection();
-    await connection.query(
-      `INSERT INTO progress (user_id, video_id, watched, watched_at) 
-       VALUES (?, ?, true, NOW())
-       ON DUPLICATE KEY UPDATE watched = true, watched_at = NOW()`,
-      [req.userId, videoId]
+    const existingProgress = progress.find(
+      p => p.user_id === req.userId && p.video_id === videoId
     );
-    connection.release();
+
+    if (!existingProgress) {
+      progress.push({
+        id: progress.length + 1,
+        user_id: req.userId,
+        video_id: videoId,
+        watched: true,
+        watched_at: new Date(),
+      });
+    }
 
     res.json({ success: true });
   } catch (error) {
@@ -260,51 +190,36 @@ app.post('/api/progress/mark-watched', authenticateToken, async (req, res) => {
   }
 });
 
-// ─── WEBHOOK DE SHOPIFY ────────────────────────────────────────────────────
+// ─── RUTAS: WEBHOOK SHOPIFY ────────────────────────────────────────────────
 
-app.post('/api/webhooks/shopify/order-created', async (req, res) => {
+app.post('/api/webhooks/shopify/order-created', (req, res) => {
   try {
-    // Convertir body a JSON si es necesario
-    let order;
-    if (typeof req.body === 'string') {
-      order = JSON.parse(req.body);
-    } else {
-      order = req.body;
+    const { email, customer } = req.body;
+    const userEmail = email || (customer && customer.email);
+
+    if (!userEmail) {
+      return res.status(400).json({ error: 'Email no encontrado' });
     }
 
-    const email = order.email;
-    const customerName = order.customer?.first_name || 'Cliente';
-
-    const connection = await pool.getConnection();
-
-    // Buscar o crear usuario
-    const [existingUsers] = await connection.query(
-      'SELECT * FROM users WHERE email = ?',
-      [email]
-    );
-
+    let user = users.find(u => u.email === userEmail);
     let userId;
-    if (existingUsers.length > 0) {
-      userId = existingUsers[0].id;
-      // Actualizar acceso
-      await connection.query(
-        'UPDATE users SET access_granted = true, shopify_order_id = ? WHERE id = ?',
-        [order.id, userId]
-      );
-    } else {
-      // Crear nuevo usuario
-      await connection.query(
-        'INSERT INTO users (email, name, shopify_id, shopify_order_id, access_granted) VALUES (?, ?, ?, ?, true)',
-        [email, customerName, order.customer?.id, order.id]
-      );
 
-      const [newUsers] = await connection.query('SELECT * FROM users WHERE email = ?', [email]);
-      userId = newUsers[0].id;
+    if (!user) {
+      userId = users.length + 1;
+      user = {
+        id: userId,
+        email: userEmail,
+        name: customer?.first_name || 'Usuario',
+        password: crypto.randomBytes(16).toString('hex'),
+        access_granted: true,
+        created_at: new Date(),
+      };
+      users.push(user);
+    } else {
+      user.access_granted = true;
+      userId = user.id;
     }
 
-    connection.release();
-
-    console.log(`✅ Usuario ${email} obtuvo acceso automático`);
     res.json({ success: true, userId });
   } catch (error) {
     console.error('Error en webhook:', error);
@@ -314,20 +229,18 @@ app.post('/api/webhooks/shopify/order-created', async (req, res) => {
 
 // ─── RUTAS: USUARIO ACTUAL ────────────────────────────────────────────────
 
-app.get('/api/user/me', authenticateToken, async (req, res) => {
+app.get('/api/user/me', authenticateToken, (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [users] = await connection.query(
-      'SELECT id, email, name, access_granted FROM users WHERE id = ?',
-      [req.userId]
-    );
-    connection.release();
-
-    if (users.length === 0) {
+    const user = users.find(u => u.id === req.userId);
+    if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
-
-    res.json(users[0]);
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      access_granted: user.access_granted,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -341,9 +254,9 @@ app.get('/api/health', (req, res) => {
 
 // ─── INICIAR SERVIDOR ────────────────────────────────────────────────────
 
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
-  await initializeDatabase();
+  console.log(`✅ API disponible en http://localhost:${PORT}/api`);
 });
 
 module.exports = app;
